@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sales Trainer</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <aside id="sidebar">
+      <div id="sidebar-header">
+        <h1>Sales Trainer</h1>
+        <button id="sync-btn" title="Sync from Fireflies">&#8635; Sync</button>
+      </div>
+      <div id="import-bar">
+        <input type="text" id="import-path" placeholder="Paste file or folder path..." />
+        <button id="import-btn">Import</button>
+      </div>
+      <div id="call-list"></div>
+    </aside>
+
+    <main id="main">
+      <div id="empty-state">
+        <p>Select a call from the sidebar to get started.</p>
+        <p>Hit <strong>Sync</strong> to pull your latest calls from Fireflies.</p>
+      </div>
+
+      <div id="call-view" class="hidden">
+        <div id="call-header">
+          <h2 id="call-title"></h2>
+          <div id="call-meta"></div>
+        </div>
+
+        <div id="tabs">
+          <button class="tab-btn active" data-tab="transcript">Transcript</button>
+          <button class="tab-btn" data-tab="scorecard">Scorecard</button>
+          <button class="tab-btn" data-tab="ideal-script">Ideal Script</button>
+        </div>
+
+        <div id="tab-content">
+          <div id="tab-transcript" class="tab-panel active">
+            <pre id="transcript-text"></pre>
+          </div>
+
+          <div id="tab-scorecard" class="tab-panel hidden">
+            <div class="generate-container">
+              <div id="scorecard-content" class="generated-content"></div>
+              <div id="scorecard-loading" class="loading hidden">
+                <div class="spinner"></div>
+                <span>Generating scorecard with Claude...</span>
+              </div>
+            </div>
+          </div>
+
+          <div id="tab-ideal-script" class="tab-panel hidden">
+            <div class="generate-container">
+              <div id="ideal-script-content" class="generated-content"></div>
+              <div id="ideal-script-loading" class="loading hidden">
+                <div class="spinner"></div>
+                <span>Generating ideal script with Claude...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="toast" class="hidden"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

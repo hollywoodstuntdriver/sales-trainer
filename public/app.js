@@ -105,7 +105,7 @@ async function syncCalls() {
 
 function renderCallList() {
   if (calls.length === 0) {
-    callList.innerHTML = '<div style="padding:16px;color:var(--text-muted);font-size:13px;">No calls yet. Hit Sync to load from Fireflies.</div>';
+    callList.innerHTML = '<div style="padding:16px;color:var(--ft-text-muted);font-size:13px;font-family:var(--ft-font-mono);">No calls yet. Hit Sync to load from Fireflies.</div>';
     return;
   }
 

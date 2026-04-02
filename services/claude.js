@@ -73,4 +73,52 @@ Format it exactly like the original transcript (Speaker Name: dialogue), but rep
   return response.choices[0].message.content;
 }
 
-module.exports = { generateScorecard, generateIdealScript, setMethodology, getMethodology };
+async function reformatTranscript(rawText) {
+  const response = await getClient().chat.completions.create({
+    model: 'gpt-4o',
+    max_tokens: 8096,
+    messages: [{
+      role: 'user',
+      content: `Reformat this raw sales call transcript into the following exact format, one entry per line:
+
+Speaker Name: M:SS  dialogue text here
+
+Rules:
+- Convert any timestamp format (00:26, 0:26, 26s, 1:05:30, etc.) to M:SS (e.g. 0:26, 1:05, 65:10)
+- If no timestamps exist, start at 0:00 and increment naturally based on conversation flow
+- Preserve speaker names exactly as they appear in the source
+- One line per speaker turn — do not split or merge turns
+- Return ONLY the formatted lines, no headers, labels, or commentary
+
+Raw transcript:
+${rawText}`
+    }]
+  });
+  return response.choices[0].message.content.trim();
+}
+
+async function reformatIdealScript(rawScript) {
+  const response = await getClient().chat.completions.create({
+    model: 'gpt-4o',
+    max_tokens: 8096,
+    messages: [{
+      role: 'user',
+      content: `Reformat the following script into transcript rows. Keep the speaker's exact words unchanged. Output only rows in this format:
+
+Speaker Name: M:SS  dialogue text here
+
+Rules:
+- Assign timestamps sequentially starting from 0:00, incrementing naturally based on line length
+- Preserve all speaker names exactly as written
+- Do not add, remove, or rewrite any words
+- One line per speaker turn
+- Return ONLY the formatted rows, nothing else
+
+Script:
+${rawScript}`
+    }]
+  });
+  return response.choices[0].message.content.trim();
+}
+
+module.exports = { generateScorecard, generateIdealScript, reformatTranscript, reformatIdealScript, setMethodology, getMethodology };

@@ -65,4 +65,13 @@ router.get('/:id', (req, res) => {
   res.json({ ...call, attendees: JSON.parse(call.attendees || '[]') });
 });
 
+// PATCH /api/calls/:id/title
+router.patch('/:id/title', (req, res) => {
+  const { title } = req.body;
+  if (!title) return res.status(400).json({ error: 'title is required' });
+  const db = getDb();
+  db.run('UPDATE calls SET title = ? WHERE id = ?', [title, req.params.id]);
+  res.json({ ok: true });
+});
+
 module.exports = router;

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { getDb } = require('../db/database');
-const { generateScorecard, generateIdealScript, setMethodology, getMethodology } = require('../services/claude');
+const { generateScorecard, generateIdealScript, reformatIdealScript, setMethodology, getMethodology } = require('../services/claude');
 
 // GET /api/generate/methodology
 router.get('/methodology', (req, res) => {
@@ -78,6 +78,20 @@ router.get('/:callId/ideal-script', async (req, res) => {
     res.json({ content: idealScript, cached: false });
   } catch (err) {
     console.error('Ideal script generation error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/generate/reformat-ideal-script
+router.post('/reformat-ideal-script', async (req, res) => {
+  const { rawScript } = req.body;
+  if (!rawScript) return res.status(400).json({ error: 'rawScript is required' });
+
+  try {
+    const content = await reformatIdealScript(rawScript);
+    res.json({ content });
+  } catch (err) {
+    console.error('Reformat ideal script error:', err);
     res.status(500).json({ error: err.message });
   }
 });

@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const rtfParser = require('rtf-parser');
 const { getDb } = require('../db/database');
+const { reformatTranscript } = require('../services/claude');
 
 function parseRtf(content) {
   return new Promise((resolve, reject) => {
@@ -143,6 +144,55 @@ router.post('/folder', async (req, res) => {
   }
 
   res.json({ imported: results.filter(r => r.ok).length, total: files.length, results });
+});
+
+// POST /api/import/manual — body: { callName, date, rawTranscript }
+router.post('/manual', async (req, res) => {
+  const { callName, date, rawTranscript } = req.body;
+  if (!callName || !rawTranscript) {
+    return res.status(400).json({ error: 'callName and rawTranscript are required' });
+  }
+
+  try {
+    const formatted = await reformatTranscript(rawTranscript);
+
+    // Parse speakers from formatted transcript
+    const speakerPattern = /^([^:\n]+):\s+\d{1,2}:\d{2}/gm;
+    const speakers = new Set();
+    let m;
+    while ((m = speakerPattern.exec(formatted)) !== null) {
+      speakers.add(m[1].trim());
+    }
+    const attendees = [...speakers].map(name => ({ displayName: name, email: '' }));
+
+    // Estimate duration from last timestamp
+    const timestamps = [...formatted.matchAll(/(\d+):(\d{2})/g)];
+    let duration = 0;
+    if (timestamps.length > 0) {
+      const last = timestamps[timestamps.length - 1];
+      duration = parseInt(last[1]) * 60 + parseInt(last[2]);
+    }
+
+    const dateMs = date ? (new Date(date).getTime() || Date.now()) : Date.now();
+    const id = `manual-${Date.now()}-${callName.replace(/\s+/g, '_').slice(0, 40)}`;
+    const db = getDb();
+
+    db.run(
+      `INSERT INTO calls (id, title, date, duration, attendees, transcript, summary)
+       VALUES (?, ?, ?, ?, ?, ?, '')
+       ON CONFLICT(id) DO UPDATE SET
+         title = excluded.title,
+         transcript = excluded.transcript,
+         attendees = excluded.attendees,
+         duration = excluded.duration`,
+      [id, callName, dateMs, duration, JSON.stringify(attendees), formatted]
+    );
+
+    res.json({ ok: true, id, title: callName });
+  } catch (err) {
+    console.error('Manual import error:', err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 module.exports = router;
